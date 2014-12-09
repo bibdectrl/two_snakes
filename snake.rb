@@ -23,6 +23,16 @@ module SnakeGame
       @segments.each {|seg| @img.draw(seg.x * CELL_SIZE, seg.y * CELL_SIZE, 1) }
     end
 
+    def touching_self?
+      head = @segments[0]
+      @segments[1...@length].each{|seg| if seg.x == head.x && seg.y == head.y then return true end}
+      false
+    end
+
+    def touching_other? other
+
+    end
+
     def move
       case @direction
       when :RIGHT
@@ -34,9 +44,7 @@ module SnakeGame
       when :DOWN
 	@y += 1      
       end
-      @segments << Segment.new(x, y)
-      @segments = @segments.reverse[0..(length-1)]
-
+      @segments = [Segment.new(x, y)] + @segments
     end
 
     def turn key
@@ -63,7 +71,9 @@ module SnakeGame
 
     def update
       @snake.move
-      @snake.check_collision
+      @snake.touching_self?
+      @snake.touching_other? nil
+      @snake.touching_food?
     end
 
     def place_food
