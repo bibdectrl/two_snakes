@@ -7,6 +7,14 @@ module SnakeGame
   HEIGHT = 480
   CELL_SIZE = 2
 
+  def new_game players
+    case players
+    when 1
+      return { }
+    when 2
+      return { }
+  end
+
   class Snake
     attr_accessor :segments, :direction, :window, :length, :x, :y
     def initialize(window, x, y)
@@ -25,12 +33,14 @@ module SnakeGame
 
     def touching_self?
       head = @segments[0]
-      @segments[1...@length].each{|seg| if seg.x == head.x && seg.y == head.y then return true end}
+      @segments[1...@length].each {|seg| if seg.x == head.x && seg.y == head.y then return true end}
       false
     end
 
     def touching_other? other
-
+      head = @segments[0]
+      other.segments[1...other.length].each {|seg| if seg.x == head.x && seg.y == head.y then return true end}
+      false
     end
 
     def move
