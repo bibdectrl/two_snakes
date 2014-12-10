@@ -5,7 +5,7 @@ module SnakeGame
   Segment = Struct.new(:x, :y)
   WIDTH = 640
   HEIGHT = 480
-  CELL_SIZE = 2
+  CELL_SIZE = 10
 
   def new_game players
     case players
@@ -13,7 +13,8 @@ module SnakeGame
       return { }
     when 2
       return { }
-  end
+    end
+  end  
 
   class Snake
     attr_accessor :segments, :direction, :window, :length, :x, :y
@@ -29,6 +30,10 @@ module SnakeGame
 
     def draw
       @segments.each {|seg| @img.draw(seg.x * CELL_SIZE, seg.y * CELL_SIZE, 1) }
+    end
+
+    def touching_food? food
+      segments[0].x == food.x && segments[0].y == food.y
     end
 
     def touching_self?
@@ -57,8 +62,12 @@ module SnakeGame
       @segments = [Segment.new(x, y)] + @segments
     end
 
-    def turn key
-
+    def turn dir
+      if dir == :UP && (@direction == :RIGHT || @direction == :LEFT) then @direction = :UP
+      elsif dir == :DOWN  && (@direction == :RIGHT || @direction == :LEFT) then @direction = :DOWN
+      elsif dir == :LEFT && (@direction == :UP || @direction == :DOWN) then @direction = :LEFT
+      elsif dir == :RIGHT && (@direction == :UP || @direction == :DOWN) then @direction = :RIGHT 
+      end
     end
 
     def check_collision
@@ -72,7 +81,7 @@ module SnakeGame
       super(WIDTH, HEIGHT, false, 6)
       self.caption = "Two Snakes"
       @snake = Snake.new(self, 30, 30)
-      place_food
+      @food = place_food
     end
 
     def draw
@@ -82,12 +91,21 @@ module SnakeGame
     def update
       @snake.move
       @snake.touching_self?
-      @snake.touching_other? nil
-      @snake.touching_food?
+      #@snake.touching_other? nil
+      @snake.touching_food? @food
+      handle_keys 
+    end
+
+    def handle_keys
+       if button_down? Gosu::KbUp then @snake.turn :UP
+       elsif button_down? Gosu::KbDown then @snake.turn :DOWN
+       elsif button_down? Gosu::KbLeft then @snake.turn :LEFT
+       elsif button_down? Gosu::KbRight then @snake.turn :RIGHT
+       end    
     end
 
     def place_food
-
+      Segment.new(20, 10)
     end
 
   end
