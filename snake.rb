@@ -59,7 +59,8 @@ module SnakeGame
       when :DOWN
 	@y += 1      
       end
-      @segments = [Segment.new(x, y)] + @segments
+      check_collision
+      @segments = [Segment.new(x, y)] + @segments[0...@length]
     end
 
     def turn dir
@@ -70,46 +71,85 @@ module SnakeGame
       end
     end
 
-    def check_collision
+    def grow
+      @length += 1
+    end
 
+    def check_collision
+      if @x < 0 || @y < 0 || @x * CELL_SIZE > WIDTH || @y * CELL_SIZE > HEIGHT then @window.game_status = :game_over end
     end
 
   end
 
   class SnakeWindow < Gosu::Window
+
+    attr_accessor :game_status
+
     def initialize
       super(WIDTH, HEIGHT, false, 6)
       self.caption = "Two Snakes"
       @snake = Snake.new(self, 30, 30)
       @food = place_food
+      @food_img = Gosu::Image.new(self, "food.png")
+      @game_status = :on
     end
 
     def draw
-      @snake.draw
+      case @game_status
+      when :on	      
+        @snake.draw
+	@food_img.draw(@food.x * CELL_SIZE, @food.y * CELL_SIZE, 1) 
+      when :game_over	
+      end
     end
 
     def update
-      @snake.move
-      @snake.touching_self?
-      #@snake.touching_other? nil
-      @snake.touching_food? @food
-      handle_keys 
+      case @game_status
+      when :on	      
+        @snake.move
+        @snake.touching_self?
+        #@snake.touching_other? nil
+	if (@snake.touching_food? @food) 
+	  @snake.grow
+	  @food = place_food
+	end
+        handle_keys
+      when :game_over
+        handle_keys
+      end	
     end
 
     def handle_keys
-       if button_down? Gosu::KbUp then @snake.turn :UP
-       elsif button_down? Gosu::KbDown then @snake.turn :DOWN
-       elsif button_down? Gosu::KbLeft then @snake.turn :LEFT
-       elsif button_down? Gosu::KbRight then @snake.turn :RIGHT
+       case @game_status
+       when :on	       
+         if button_down? Gosu::KbUp then @snake.turn :UP
+         elsif button_down? Gosu::KbDown then @snake.turn :DOWN
+         elsif button_down? Gosu::KbLeft then @snake.turn :LEFT
+         elsif button_down? Gosu::KbRight then @snake.turn :RIGHT
+         elsif button_down? Gosu::KbEscape then exit
+	 end
+       when :game_over
+        if button_down? Gosu::KbEscape then exit 
+	elsif button_down? Gosu::KbR 
+	  reset_game
+	  @game_status = :on
+	end
        end    
     end
 
     def place_food
-      Segment.new(20, 10)
+      food_x = rand (WIDTH / CELL_SIZE - 5) + 2
+      food_y = rand (HEIGHT / CELL_SIZE - 5) + 2      
+      Segment.new(food_x, food_y)
+    end
+
+    def reset_game
+      @snake = Snake.new(self, 30, 30)
+      @food = place_food
     end
 
   end
 
 end
-
+  
 SnakeGame::SnakeWindow.new.show
